@@ -27,7 +27,7 @@
  * @subpackage Nicheclear_api/includes
  * @author     Meadowlark <meadowlark@meadowlark.com>
  */
-class Nicheclear_api {
+class NicheclearAPI {
 
 	/**
 	 * The loader that's responsible for maintaining and registering all hooks that power
@@ -35,7 +35,7 @@ class Nicheclear_api {
 	 *
 	 * @since    1.0.0
 	 * @access   protected
-	 * @var      Nicheclear_api_Loader    $loader    Maintains and registers all hooks for the plugin.
+	 * @var      NicheclearAPI_Loader    $loader    Maintains and registers all hooks for the plugin.
 	 */
 	protected $loader;
 
@@ -72,7 +72,7 @@ class Nicheclear_api {
 		} else {
 			$this->version = '1.0.0';
 		}
-		$this->plugin_name = 'nicheclear_api';
+		$this->plugin_name = 'NicheclearAPI';
 
 		$this->load_dependencies();
 		$this->set_locale();
@@ -122,7 +122,7 @@ class Nicheclear_api {
 		 */
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'public/class-nicheclear_api-public.php';
 
-		$this->loader = new Nicheclear_api_Loader();
+		$this->loader = new NicheclearAPI_Loader();
 
 	}
 
@@ -137,7 +137,7 @@ class Nicheclear_api {
 	 */
 	private function set_locale() {
 
-		$plugin_i18n = new Nicheclear_api_i18n();
+		$plugin_i18n = new NicheclearAPI_i18n();
 
 		$this->loader->add_action( 'plugins_loaded', $plugin_i18n, 'load_plugin_textdomain' );
 
@@ -152,7 +152,7 @@ class Nicheclear_api {
 	 */
 	private function define_admin_hooks() {
 
-		$plugin_admin = new Nicheclear_api_Admin( $this->get_plugin_name(), $this->get_version() );
+		$plugin_admin = new NicheclearAPI_Admin( $this->get_plugin_name(), $this->get_version() );
 
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_styles' );
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts' );
@@ -168,7 +168,7 @@ class Nicheclear_api {
 	 */
 	private function define_public_hooks() {
 
-		$plugin_public = new Nicheclear_api_Public( $this->get_plugin_name(), $this->get_version() );
+		$plugin_public = new NicheclearAPI_Public( $this->get_plugin_name(), $this->get_version() );
 
 		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_styles' );
 		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_scripts' );
@@ -198,8 +198,8 @@ class Nicheclear_api {
 	/**
 	 * The reference to the class that orchestrates the hooks with the plugin.
 	 *
-	 * @since     1.0.0
-	 * @return    Nicheclear_api_Loader    Orchestrates the hooks of the plugin.
+	 * @return    NicheclearAPI_Loader    Orchestrates the hooks of the plugin.
+	 *@since     1.0.0
 	 */
 	public function get_loader() {
 		return $this->loader;

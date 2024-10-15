@@ -43,7 +43,7 @@ define( 'NICHECLEAR_API_VERSION', '1.0.0' );
  */
 function activate_nicheclear_api() {
 	require_once plugin_dir_path( __FILE__ ) . 'includes/class-nicheclear_api-activator.php';
-	Nicheclear_api_Activator::activate();
+	NicheclearAPI_Activator::activate();
 }
 
 /**
@@ -52,7 +52,7 @@ function activate_nicheclear_api() {
  */
 function deactivate_nicheclear_api() {
 	require_once plugin_dir_path( __FILE__ ) . 'includes/class-nicheclear_api-deactivator.php';
-	Nicheclear_api_Deactivator::deactivate();
+	NicheclearAPI_Deactivator::deactivate();
 }
 
 register_activation_hook( __FILE__, 'activate_nicheclear_api' );
@@ -75,7 +75,7 @@ require plugin_dir_path( __FILE__ ) . 'includes/class-nicheclear_api.php';
  */
 function run_nicheclear_api() {
 
-	$plugin = new Nicheclear_api();
+	$plugin = new NicheclearAPI();
 	$plugin->run();
 
 }

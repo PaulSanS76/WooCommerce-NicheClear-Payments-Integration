@@ -20,7 +20,7 @@
  * @subpackage Nicheclear_api/includes
  * @author     Meadowlark <meadowlark@meadowlark.com>
  */
-class Nicheclear_api_Deactivator {
+class NicheclearAPI_Deactivator {
 
 	/**
 	 * Short Description. (use period)

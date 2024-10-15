@@ -20,7 +20,7 @@
  * @subpackage Nicheclear_api/admin
  * @author     Meadowlark <meadowlark@meadowlark.com>
  */
-class Nicheclear_api_Admin {
+class NicheclearAPI_Admin {
 
 	/**
 	 * The ID of this plugin.

@@ -21,7 +21,7 @@
  * @subpackage Nicheclear_api/includes
  * @author     Meadowlark <meadowlark@meadowlark.com>
  */
-class Nicheclear_api_Loader {
+class NicheclearAPI_Loader {
 
 	/**
 	 * The array of actions registered with WordPress.
