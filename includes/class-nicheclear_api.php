@@ -156,6 +156,9 @@ class NicheclearAPI {
 
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_styles' );
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts' );
+		$this->loader->add_action( 'admin_menu', $plugin_admin, 'ncapi_add_settings_page' );
+		$this->loader->add_action( 'admin_init', $plugin_admin, 'ncapi_register_settings' );
+		$this->loader->add_filter( "plugin_action_links_nicheclear_api/nicheclear_api.php", $plugin_admin, 'plugin_add_settings_link' );
 
 	}
 
@@ -172,7 +175,22 @@ class NicheclearAPI {
 
 		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_styles' );
 		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_scripts' );
+//		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_checkout_custom_js_css' );
 
+//		$this->loader->add_action( 'wp_ajax_ncapi_create_order', $plugin_public, 'ncapi_create_order' );
+//		$this->loader->add_action( 'wp_ajax_nopriv_ncapi_create_order', $plugin_public, 'ncapi_create_order' );
+
+//		$this->loader->add_action( 'woocommerce_review_order_after_payment', $plugin_public, 'inject_content_after_payment_methods' );
+
+		require_once ABSPATH . 'wp-content/plugins/nicheclear_api/includes/class-nicheclear_api-woo-manager.php';
+		$woo_manager = new NicheclearAPI_WooManager();
+		$this->loader->add_filter( 'woocommerce_payment_gateways', $woo_manager, 'add_test_gateway_class' );
+		$this->loader->add_action( 'plugins_loaded', $woo_manager, 'init_test_gateway_class' );
+
+		require_once ABSPATH . 'wp-content/plugins/nicheclear_api/includes/class-nicheclear_api-webhooks.php';
+		$webhooks_manager = new NicheclearAPI_Webhooks();
+		$this->loader->add_action( 'woocommerce_api_ncapi_create_payment', $webhooks_manager, 'create_payment_webhook' );
+		$this->loader->add_action( 'woocommerce_api_nc-payment-complete', $webhooks_manager, 'payment_complete' );
 	}
 
 	/**
