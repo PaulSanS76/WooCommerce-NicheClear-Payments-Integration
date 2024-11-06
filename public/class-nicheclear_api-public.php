@@ -20,6 +20,10 @@
  * @subpackage Nicheclear_api/public
  * @author     Meadowlark <meadowlark@meadowlark.com>
  */
+
+require_once ABSPATH . 'wp-content/plugins/nicheclear_api/includes/class-nicheclear_api-common.php';
+require_once ABSPATH . 'wp-content/plugins/nicheclear_api/includes/class-nicheclear_api-db-manager.php';
+
 class NicheclearAPI_Public {
 
 	/**
@@ -103,11 +107,14 @@ class NicheclearAPI_Public {
 
 	public function enqueue_checkout_custom_js_css() {
 		if ( is_checkout() ) {
+			$active_payment_methods = NicheclearAPI_DB_Manager::get_active_methods_titles();
+
 			wp_enqueue_script( 'checkout-js', plugins_url( 'js/nicheclear_api-checkout.js', __FILE__ ), [ 'jquery' ], $this->version, true );
-			wp_localize_script( 'checkout-js', 'checkout_vars', array(
-				'payment_method' => 'test', // Replace 'test' with your payment method's ID
-				'button_text'    => 'Pay via PIX',
-				'ajax_url' => admin_url('admin-ajax.php'),
+			wp_localize_script( 'checkout-js', 'ncapi_checkout_vars', array(
+				'payment_method'         => 'nc_blik',
+				'button_text'            => 'Pay via BLIK',
+				'active_payment_methods' => $active_payment_methods,
+				'ajax_url'               => admin_url( 'admin-ajax.php' ),
 			) );
 
 			wp_enqueue_style( 'checkout-css', plugin_dir_url( __FILE__ ) . 'css/nicheclear_api-checkout.css', array(), $this->version, 'all' );
@@ -117,6 +124,8 @@ class NicheclearAPI_Public {
 
 	public function inject_content_after_payment_methods() {
 		?>
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.14.4/dist/sweetalert2.all.min.js"></script>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.14.4/dist/sweetalert2.min.css">
         <div id="ncapi-payment-method-section" style="display:none;">
             <div class="messages"></div>
 
@@ -127,7 +136,7 @@ class NicheclearAPI_Public {
 		<?php
 	}
 
-	public function ncapi_create_order(  ) {
+	public function ncapi_create_order() {
 		try {
 			// Initialize WooCommerce checkout instance
 			$checkout = WC()->checkout();
@@ -135,31 +144,17 @@ class NicheclearAPI_Public {
 			// Process the checkout using the POST data, which includes all the necessary checkout fields
 			$checkout->process_checkout();
 
-			// Load the order to finalize any custom actions or payment handling
-//			$order = wc_get_order($order_id);
-
-			// Here, you can add custom logic to process payment or handle order status if necessary
-			// Example:
-			// $payment_result = your_custom_payment_processing_function($order);
-			// if ($payment_result['success']) {
-			//     $order->payment_complete();
-			// } else {
-			//     $order->update_status('failed', $payment_result['message']);
-			//     wp_send_json_error(['message' => $payment_result['message']]);
-			// }
-
 			// Assuming everything is fine, respond with a success and redirect URL
 			wp_send_json_success( [
 //				'redirect_url' => $order->get_checkout_order_received_url(),
-                'OK'=>true
+				'OK' => true
 			] );
 
-		} catch (Exception $e) {
-			// If there's an error during checkout processing, handle it gracefully
-			wp_send_json_error(array(
+		} catch ( Exception $e ) {
+			wp_send_json_error( array(
 				'message' => $e->getMessage()
-			));
+			) );
 		}
-    }
+	}
 
 }

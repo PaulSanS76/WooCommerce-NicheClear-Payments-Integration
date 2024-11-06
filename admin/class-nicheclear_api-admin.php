@@ -11,6 +11,7 @@
  */
 
 require_once ABSPATH . 'wp-content/plugins/nicheclear_api/includes/class-nicheclear_api-common.php';
+require_once ABSPATH . 'wp-content/plugins/nicheclear_api/includes/class-nicheclear_api-db-manager.php';
 
 /**
  * The admin-specific functionality of the plugin.
@@ -136,7 +137,7 @@ class NicheclearAPI_Admin {
 	}
 
 // Render the settings page
-	public function ncapi_render_settings_page() {
+	public function ncapi_render_settings_page_bak() {
 		?>
         <div class="wrap">
             <h1><?php echo $this->plugin_name; ?> Settings</h1>
@@ -166,6 +167,47 @@ class NicheclearAPI_Admin {
             </form>
         </div>
 		<?php
+	}
+
+	public function ncapi_render_settings_page() {
+		include ABSPATH . "wp-content/plugins/nicheclear_api/admin/partials/nicheclear_api-admin-display.php";
+	}
+
+	public function get_plugin_options() {
+		$opts            = NicheclearAPI_Common::get_plugin_options();
+		$payment_methods = NicheclearAPI_DB_Manager::get_payment_method_options();
+		wp_send_json_success( [ 'settings' => $opts, 'payment_methods' => $payment_methods ] );
+	}
+
+	public function save_plugin_options() {
+		// Verify nonce for security
+		if ( isset( $_REQUEST['nonce'] ) && wp_verify_nonce( $_REQUEST['nonce'], 'ncapi_save_options_nonce' ) ) {
+			// Validate and sanitize input
+//			$new_options = array();
+			$json_input = json_decode( file_get_contents( 'php://input' ), true );
+
+			if ( isset( $json_input['options'] ) && is_array( $json_input['options'] ) ) {
+				$new_options = $json_input['options'];
+			} else {
+				wp_send_json_error( 'Invalid settings data.' );
+
+				return;
+			}
+
+			// Update options
+			$settings = NicheclearAPI_DB_Manager::save_plugin_settings( $new_options['settings'] );
+			NicheclearAPI_DB_Manager::save_plugin_payment_methods( $new_options['payment_methods'] );
+
+			// Send success response
+			wp_send_json_success( $settings );
+		} else {
+			wp_send_json_error( array(
+				'message'  => __( 'Invalid nonce specified', "waxpeer_api" ),
+				'response' => 403,
+			) );
+		}
+
+		wp_die();
 	}
 
 }

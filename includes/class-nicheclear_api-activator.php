@@ -31,6 +31,7 @@ class NicheclearAPI_Activator {
 	 */
 	public static function activate() {
 		require_once ABSPATH . 'wp-content/plugins/nicheclear_api/includes/class-nicheclear_api-common.php';
+		require_once ABSPATH . 'wp-content/plugins/nicheclear_api/includes/class-nicheclear_api-db-manager.php';
 		$log_dir = NicheclearAPI_Common::log_dir();
 
 		if ( ! file_exists( $log_dir ) ) {
@@ -40,8 +41,7 @@ class NicheclearAPI_Activator {
 			wp_mkdir_p( "$log_dir/json" );
 		}
 
-//		update_option( 'ncapi_key', 'yMkuqJlK5dVJ9Ciq9B8wBwKqGVQkyCE7' );
-//		update_option( 'ncapi_signing_key', 'CclPd9hTvcXP' );
+		NicheclearAPI_DB_Manager::create_db_tables();
 	}
 
 }

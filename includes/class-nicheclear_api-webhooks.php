@@ -8,7 +8,9 @@ class NicheclearAPI_Webhooks {
 	public function create_payment_webhook() {
 		$post_body = file_get_contents( 'php://input' );
 
-		$hmac_hash = hash_hmac( 'sha256', $post_body, NicheclearAPI_Common::get_signing_key() );
+		$sandbox = isset( $_REQUEST['sandbox'] );
+
+		$hmac_hash = hash_hmac( 'sha256', $post_body, NicheclearAPI_Common::get_signing_key($sandbox) );
 
 		/*		if ( NicheclearAPI_Common::json_logging ) {
 					file_put_contents( NicheclearAPI_Common::log_dir() . '/json/' . date( 'Y-m-d_H-i-s' ) . '_create_payment_webhook_hmac.json',
@@ -64,6 +66,7 @@ class NicheclearAPI_Webhooks {
 
 	}
 
+	// /wc-api/nc-payment-complete?order_id=$order_id
 	public function payment_complete() {
 		$order_id = $_REQUEST['order_id'] ?? null;
 

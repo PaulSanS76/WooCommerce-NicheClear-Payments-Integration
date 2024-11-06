@@ -5,8 +5,12 @@ namespace tests;
 require_once '../../../../wp-tests-config.php';
 //require_once '../../../../wp-config.php';
 
+require_once ABSPATH . 'wp-content/plugins/nicheclear_api/includes/class-nicheclear_api-common.php';
+require_once ABSPATH . 'wp-content/plugins/nicheclear_api/includes/class-nicheclear_api-db-manager.php';
 require_once ABSPATH . 'wp-content/plugins/nicheclear_api/includes/payment_gateways/class-nicheclear_api-gateway_base.php';
 
+use NicheclearAPI_Common;
+use NicheclearAPI_DB_Manager;
 use PHPUnit\Framework\TestCase;
 use WC_Gateway_NicheClear_Base;
 
@@ -54,6 +58,22 @@ class NicheClearAPI_Test extends TestCase {
 
 	public function test_plugin_basename(  ) {
 		$basename = plugin_basename(ABSPATH . 'wp-content/plugins/nicheclear_api/nicheclear_api.php');
+		$this->assertTrue( true );
+	}
+
+	public function test_get_multiple_options(  ) {
+		$opts = get_options(['woocommerce_nc_blik_settings', 'woocommerce_nc_pix_settings', 'qqq']);
+		$this->assertTrue( true );
+	}
+
+	public function test_create_tables(  ) {
+		NicheclearAPI_DB_Manager::create_db_tables();
+		$this->assertTrue( true );
+	}
+
+	public function test_uuid() {
+		$uuid = wp_generate_uuid4();
+		$l = strlen($uuid); //36
 		$this->assertTrue( true );
 	}
 

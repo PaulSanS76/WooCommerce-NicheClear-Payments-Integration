@@ -1,12 +1,13 @@
 <?php
 
 require_once ABSPATH . 'wp-content/plugins/nicheclear_api/includes/class-nicheclear_api-common.php';
+require_once ABSPATH . 'wp-content/plugins/nicheclear_api/includes/class-nicheclear_api-db-manager.php';
 
 class WC_Gateway_NicheClear_Base extends WC_Payment_Gateway {
 	private $api_url = 'https://app.nicheclear.com';
 	private $api_sandbox_url = 'https://app-demo.nicheclear.com';
 
-	private $api_key;
+	protected $api_key;
 
 	protected bool $is_sandbox = true;
 
@@ -14,32 +15,14 @@ class WC_Gateway_NicheClear_Base extends WC_Payment_Gateway {
 		return $this->is_sandbox ? $this->api_sandbox_url : $this->api_url;
 	}
 
-	protected function get_payment_processor_code(  ) {
+	protected function get_payment_processor_code() {
 		return 'nc_base';
 	}
 
 	public function __construct() {
-		$this->id                 = 'nc_base'; // Unique ID for the gateway.
-		$this->icon               = ''; // URL of the icon that represents the gateway.
-		$this->has_fields         = false; // If the gateway has custom form fields.
-		$this->method_title       = 'NicheClear Base Payment Gateway';
-		$this->method_description = 'Description of the test payment gateway.';
-
-		// Load settings.
-//		$this->init_form_fields();
-//		$this->init_settings();
-
-		// Get gateway settings.
-		$this->title       = $this->get_option( 'title' );
-		$this->description = $this->get_option( 'description' );
-		$this->is_sandbox = $this->get_option( 'sandbox' ) == 'yes';
-		$this->api_key     = NicheclearAPI_Common::get_api_key();
-
-		// Actions.
-		/*add_action( 'woocommerce_update_options_payment_gateways_' . $this->id, [
-			$this,
-			'process_admin_options'
-		] );*/
+		$this->id = 'nc_base'; // Unique ID for the gateway.
+//		$this->icon       = ''; // URL of the icon that represents the gateway.
+//		$this->has_fields = false; // If the gateway has custom form fields.
 	}
 
 	// Define the settings fields for the payment gateway.
@@ -68,7 +51,7 @@ class WC_Gateway_NicheClear_Base extends WC_Payment_Gateway {
 				'title'   => 'Sandbox Mode',
 				'type'    => 'checkbox',
 				'label'   => "Enable Sandbox Mode",
-				'default' => 'yes',
+				'default' => 'no',
 			),
 		);
 	}
@@ -80,6 +63,7 @@ class WC_Gateway_NicheClear_Base extends WC_Payment_Gateway {
 			$order   = wc_get_order( $order_id );
 			$req     = $this->ncapi_create_payment_request( $order );
 			$nc_resp = $this->ncapi_send_payment_request( $req );
+			NicheclearAPI_DB_Manager::insert_payment_info( $req['referenceId'], $order_id );
 
 			if ( ! empty( $nc_resp['errors'] ) ) {
 				$err_msg = '';
@@ -101,8 +85,11 @@ class WC_Gateway_NicheClear_Base extends WC_Payment_Gateway {
 			//		$order->payment_complete();
 
 			return [
-				'result'   => 'success',
-				'redirect' => $ncapi_redirect_url,
+				'result'    => 'success',
+				'redirect'  => $ncapi_redirect_url,
+//				'order_id' => $order_id,
+				'returnUrl' => get_site_url() . "/wc-api/nc-payment-complete?order_id={$order->get_id()}",
+
 //				'ncapi_redirect_url' => $ncapi_redirect_url,
 				//			'redirect' => $this->get_return_url( $order ),
 			];
@@ -125,8 +112,11 @@ class WC_Gateway_NicheClear_Base extends WC_Payment_Gateway {
 	}
 
 	public function ncapi_create_payment_request( WC_Order $order ): array {
+
+		$uuid = wp_generate_uuid4();
+
 		return [
-			'referenceId'    => $order->get_id(),
+			'referenceId'    => $uuid,
 			'description'    => "Order #{$order->get_id()} from " . get_bloginfo( 'name' ),
 			'paymentType'    => 'DEPOSIT',
 			'paymentMethod'  => $this->get_payment_processor_code(),
@@ -147,11 +137,9 @@ class WC_Gateway_NicheClear_Base extends WC_Payment_Gateway {
 				'state'        => $order->get_billing_state(),
 				'postalCode'   => $order->get_billing_postcode()
 			],
-			'webhookUrl'     => NicheclearAPI_Common::get_webhook_url_base() . '/wc-api/ncapi_create_payment',
-//			'returnUrl'      => get_site_url(),
-//			'returnUrl'      => $order->get_view_order_url(),
-//			'returnUrl'      => $order->get_checkout_payment_url(),
+			'webhookUrl'     => NicheclearAPI_Common::get_webhook_url_base() . '/wc-api/ncapi_create_payment' . ( $this->is_sandbox ? '?sandbox' : '' ),
 			'returnUrl'      => get_site_url() . "/wc-api/nc-payment-complete?order_id={$order->get_id()}",
+//			'returnUrl'      => get_site_url() . "/wc-api/nc-payment-complete?uuid={$uuid}",
 		];
 
 	}

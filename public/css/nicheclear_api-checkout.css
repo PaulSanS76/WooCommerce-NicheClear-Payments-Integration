@@ -1,0 +1,8 @@
+form.ncapi #place_order {
+    display: none !important;
+}
+
+#pay_ncapi {
+    max-width: 600px;
+    width: 100%;
+}
