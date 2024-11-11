@@ -37,19 +37,33 @@ class NicheclearAPI_DB_Manager {
 
 		require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
 
-		$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}ncapi_payments" );
+		$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}ncapi_payments" ); //TODO: remove
+
+		/*		$sql = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}ncapi_payments (
+			ID              bigint unsigned auto_increment,
+			uuid            CHAR(36)                             NOT NULL unique,
+			order_id        bigint unsigned,
+			status          varchar(50)                          NULL,
+			note         	text,
+			request         text,
+			response        text,
+			webhook_request text,
+			created_at      datetime default current_timestamp() NOT NULL,
+			updated_at      datetime                             NULL on update current_timestamp(),
+			PRIMARY KEY  (ID)
+		) {$charset_collate};";*/
 
 		$sql = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}ncapi_payments (
-    ID              bigint unsigned auto_increment,
-    uuid            CHAR(36)                             NOT NULL unique,
+    uuid            char(36)         NOT NULL default(uuid()),
     order_id        bigint unsigned,
     status          varchar(50)                          NULL,
+    note         	text,
     request         text,
     response        text,
     webhook_request text,
     created_at      datetime default current_timestamp() NOT NULL,
     updated_at      datetime                             NULL on update current_timestamp(),
-    PRIMARY KEY  (ID)
+    PRIMARY KEY  (uuid)
 ) {$charset_collate};";
 
 		dbDelta( $sql );
@@ -118,16 +132,55 @@ class NicheclearAPI_DB_Manager {
 		return $result;
 	}
 
-	public static function insert_payment_info( $uuid, $order_id ) {
+	public static function insert_payment_info( $uuid, $order_id, $req ) {
 		global $wpdb;
 		$wpdb->insert(
 			$wpdb->prefix . 'ncapi_payments',
 			[
-				'uuid'      => $uuid,
-				'order_id'  => $order_id,
+				'uuid'     => $uuid,
+				'order_id' => $order_id,
+				'request'  => json_encode( $req, JSON_PRETTY_PRINT ),
 			]
 		);
+	}
 
-		return $wpdb->insert_id;
+	public static function load_payment_info( $uuid ): array|null {
+		if ( ! $uuid ) {
+			return null;
+		}
+
+		global $wpdb;
+
+		$result = $wpdb->get_row(
+			$wpdb->prepare(
+				"SELECT * FROM {$wpdb->prefix}ncapi_payments WHERE uuid = %s", $uuid
+			), ARRAY_A
+		);
+
+		return $result;
+	}
+
+	public static function get_payment_status( $uuid ) {
+		if ( ! $uuid ) {
+			return null;
+		}
+
+		global $wpdb;
+
+		return $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT status FROM {$wpdb->prefix}ncapi_payments WHERE uuid = %s", $uuid
+			)
+		);
+	}
+
+	public static function update_payment_info( $uuid, array $data ) {
+		global $wpdb;
+		$wpdb->update( $wpdb->prefix . 'ncapi_payments', $data, [ 'uuid' => $uuid, ] );
+	}
+
+	public function delete_payment_info( $uuid ) {
+		global $wpdb;
+		$wpdb->delete( $wpdb->prefix . 'ncapi_payments', [ 'uuid' => $uuid, ] );
 	}
 }

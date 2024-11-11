@@ -156,5 +156,25 @@ class NicheclearAPI_Common {
 		return defined( 'WEBHOOK_URL_BASE' ) ? WEBHOOK_URL_BASE : get_site_url();
 	}
 
+	public static function redirect_in_top_frame( $location ) {
+		echo <<<HTML
+<!DOCTYPE html>
+<html>
+<head>
+	<script type="text/javascript">
+	if (typeof window.top.ncapi_add_notice === "function") {
+		window.top.ncapi_add_notice();
+	}
+	window.top.location.href = "{$location}";
+	</script>
+	<title>Redirecting...</title>
+</head>
+<body>
+	<p>If you are not redirected automatically, follow the <a href="{$location}" target="_top">link</a>.</p>
+</body>
+</html>
+HTML;
+		exit();
+	}
 
 }

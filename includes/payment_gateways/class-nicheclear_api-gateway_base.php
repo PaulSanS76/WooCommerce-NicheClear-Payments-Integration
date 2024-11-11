@@ -60,10 +60,15 @@ class WC_Gateway_NicheClear_Base extends WC_Payment_Gateway {
 	public function process_payment( $order_id ) {
 
 		try {
-			$order   = wc_get_order( $order_id );
-			$req     = $this->ncapi_create_payment_request( $order );
+			$order = wc_get_order( $order_id );
+			$req   = $this->ncapi_create_payment_request( $order );
+			NicheclearAPI_DB_Manager::insert_payment_info( $req['uuid'], $order_id, $req );
+			$uuid = $req['uuid'];
+			unset( $req['uuid'] );
+
 			$nc_resp = $this->ncapi_send_payment_request( $req );
-			NicheclearAPI_DB_Manager::insert_payment_info( $req['referenceId'], $order_id );
+
+			NicheclearAPI_DB_Manager::update_payment_info( $uuid, [ 'response' => json_encode( $nc_resp, JSON_PRETTY_PRINT ) ] );
 
 			if ( ! empty( $nc_resp['errors'] ) ) {
 				$err_msg = '';
@@ -85,10 +90,17 @@ class WC_Gateway_NicheClear_Base extends WC_Payment_Gateway {
 			//		$order->payment_complete();
 
 			return [
-				'result'    => 'success',
-				'redirect'  => $ncapi_redirect_url,
+				'result'            => 'success',
+//				'redirect'          => $ncapi_redirect_url,
 //				'order_id' => $order_id,
-				'returnUrl' => get_site_url() . "/wc-api/nc-payment-complete?order_id={$order->get_id()}",
+				'returnUrl'         => get_site_url() . "/wc-api/nc-payment-complete?order_id={$order->get_id()}",
+				'ncapi_checkout_dyn_data' => [
+					'order_id'       => $order->get_id(),
+					'payment_uuid'   => $uuid,
+					'payment_method' => $this->get_payment_processor_code(),
+					'nc_frame_url'       => $ncapi_redirect_url,
+					'after_pay_url'      => get_site_url() . "/wc-api/nc-payment-complete?order_id={$order->get_id()}",
+				]
 
 //				'ncapi_redirect_url' => $ncapi_redirect_url,
 				//			'redirect' => $this->get_return_url( $order ),
@@ -104,6 +116,7 @@ class WC_Gateway_NicheClear_Base extends WC_Payment_Gateway {
 		}
 	}
 
+
 	/**
 	 * @return string
 	 */
@@ -116,7 +129,8 @@ class WC_Gateway_NicheClear_Base extends WC_Payment_Gateway {
 		$uuid = wp_generate_uuid4();
 
 		return [
-			'referenceId'    => $uuid,
+			'uuid'           => $uuid,
+			'referenceId'    => $order->get_id(),
 			'description'    => "Order #{$order->get_id()} from " . get_bloginfo( 'name' ),
 			'paymentType'    => 'DEPOSIT',
 			'paymentMethod'  => $this->get_payment_processor_code(),
@@ -127,8 +141,6 @@ class WC_Gateway_NicheClear_Base extends WC_Payment_Gateway {
 				'firstName'   => $order->get_billing_first_name(),
 				'lastName'    => $order->get_billing_last_name(),
 				'email'       => $order->get_billing_email(),
-//				'dateOfBirth'    => $order->get_meta( 'billing_birthdate' ),
-//				'documentNumber' => $order->get_meta( 'billing_document_number' )
 			],
 			'billingAddress' => [
 				'countryCode'  => $order->get_billing_country(),
@@ -137,9 +149,9 @@ class WC_Gateway_NicheClear_Base extends WC_Payment_Gateway {
 				'state'        => $order->get_billing_state(),
 				'postalCode'   => $order->get_billing_postcode()
 			],
-			'webhookUrl'     => NicheclearAPI_Common::get_webhook_url_base() . '/wc-api/ncapi_create_payment' . ( $this->is_sandbox ? '?sandbox' : '' ),
-			'returnUrl'      => get_site_url() . "/wc-api/nc-payment-complete?order_id={$order->get_id()}",
-//			'returnUrl'      => get_site_url() . "/wc-api/nc-payment-complete?uuid={$uuid}",
+			'webhookUrl'     => NicheclearAPI_Common::get_webhook_url_base() . "/wc-api/ncapi_create_payment?uuid={$uuid}" . ( $this->is_sandbox ? '&sandbox' : '' ),
+//			'returnUrl'      => get_site_url() . "/wc-api/nc-payment-complete?order_id={$order->get_id()}",
+			'returnUrl'      => get_site_url() . "/wc-api/nc-payment-complete?uuid={$uuid}",
 		];
 
 	}

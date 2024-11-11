@@ -70,7 +70,7 @@ class NicheclearAPI {
 		if ( defined( 'NICHECLEAR_API_VERSION' ) ) {
 			$this->version = NICHECLEAR_API_VERSION;
 		} else {
-			$this->version = '1.0.0';
+			$this->version = '1.0.1';
 		}
 		$this->plugin_name = 'NicheclearAPI';
 
@@ -177,13 +177,19 @@ class NicheclearAPI {
 
 		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_styles' );
 		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_scripts' );
-		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_checkout_custom_js_css' );
+		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_checkout_js_css' );
 
 		$this->loader->add_action( 'wp_ajax_ncapi_create_order', $plugin_public, 'ncapi_create_order' );
 		$this->loader->add_action( 'wp_ajax_nopriv_ncapi_create_order', $plugin_public, 'ncapi_create_order' );
 
-		$this->loader->add_action( 'woocommerce_review_order_after_payment', $plugin_public, 'inject_content_after_payment_methods' );
-		$this->loader->add_action( 'woocommerce_pay_order_after_submit', $plugin_public, 'inject_content_after_payment_methods' );
+		$this->loader->add_action( 'wp_ajax_nc_pay_for_order', $plugin_public, 'nc_pay_for_order' );
+		$this->loader->add_action( 'wp_ajax_nopriv_nc_pay_for_order', $plugin_public, 'nc_pay_for_order' );
+
+		$this->loader->add_action( 'wp_ajax_ncapi_add_notice', $plugin_public, 'ncapi_add_notice' );
+		$this->loader->add_action( 'wp_ajax_nopriv_ncapi_add_notice', $plugin_public, 'ncapi_add_notice' );
+
+		$this->loader->add_action( 'woocommerce_review_order_after_payment', $plugin_public, 'inject_js_after_payment_methods' );
+		$this->loader->add_action( 'woocommerce_pay_order_after_submit', $plugin_public, 'inject_js_after_payment_methods' );
 
 		require_once ABSPATH . 'wp-content/plugins/nicheclear_api/includes/class-nicheclear_api-woo-manager.php';
 		$woo_manager = new NicheclearAPI_WooManager();
@@ -194,6 +200,9 @@ class NicheclearAPI {
 		$webhooks_manager = new NicheclearAPI_Webhooks();
 		$this->loader->add_action( 'woocommerce_api_ncapi_create_payment', $webhooks_manager, 'create_payment_webhook' );
 		$this->loader->add_action( 'woocommerce_api_nc-payment-complete', $webhooks_manager, 'payment_complete' );
+
+//		require_once ABSPATH . 'wp-content/plugins/nicheclear_api/includes/payment_gateways/class-nicheclear_api-gateway_base.php';
+//		$payment_gateway = new NicheclearAPI_Webhooks();
 	}
 
 	/**
