@@ -22,12 +22,12 @@
  */
 class NicheclearAPI_Activator {
 
+
 	/**
-	 * Short Description. (use period)
+	 * Activates the plugin by ensuring necessary directories are created, database tables are set up,
+	 * Woocommerce checkout page is replaced, and a CRON job for database cleanup is scheduled.
 	 *
-	 * Long Description.
-	 *
-	 * @since    1.0.0
+	 * @return void
 	 */
 	public static function activate() {
 		require_once ABSPATH . 'wp-content/plugins/nicheclear_api/includes/class-nicheclear_api-common.php';
@@ -42,6 +42,12 @@ class NicheclearAPI_Activator {
 		}
 
 		NicheclearAPI_DB_Manager::create_db_tables();
+		NicheclearAPI_DB_Manager::replace_woo_checkout_page();
+
+		if (!wp_next_scheduled(NicheclearAPI_Common::CRON_HOOK_DB_CLEANUP)) {
+			$timestamp = ( new DateTime( 'tomorrow 3:00 am', new DateTimeZone( wp_timezone_string() ) ) )->getTimestamp();
+			wp_schedule_event($timestamp, 'monthly', NicheclearAPI_Common::CRON_HOOK_DB_CLEANUP);
+		}
 	}
 
 }

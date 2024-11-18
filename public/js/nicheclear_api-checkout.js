@@ -20,6 +20,10 @@
         updatePlaceOrderButton();
     });
 
+    $(document.body).on('updated_checkout', function() {
+        updatePlaceOrderButton();
+    });
+
     $('#pay_ncapi').click(function () {
 
         let selectedPaymentMethod = $('input[name="payment_method"]:checked').val() || '';

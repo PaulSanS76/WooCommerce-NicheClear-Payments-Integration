@@ -13,6 +13,8 @@
  * @subpackage Nicheclear_api/includes
  */
 
+require_once ABSPATH . 'wp-content/plugins/nicheclear_api/includes/class-nicheclear_api-common.php';
+
 /**
  * The core plugin class.
  *
@@ -162,6 +164,8 @@ class NicheclearAPI {
 		$this->loader->add_action( 'wp_ajax_get_plugin_options', $plugin_admin, 'get_plugin_options' );
 		$this->loader->add_action( 'wp_ajax_save_plugin_options', $plugin_admin, 'save_plugin_options' );
 
+		$this->loader->add_action( NicheclearAPI_Common::CRON_HOOK_DB_CLEANUP, $plugin_admin, 'run_db_cleanup' );
+
 	}
 
 	/**
@@ -193,16 +197,16 @@ class NicheclearAPI {
 
 		require_once ABSPATH . 'wp-content/plugins/nicheclear_api/includes/class-nicheclear_api-woo-manager.php';
 		$woo_manager = new NicheclearAPI_WooManager();
-		$this->loader->add_filter( 'woocommerce_payment_gateways', $woo_manager, 'add_test_gateway_class' );
-		$this->loader->add_action( 'plugins_loaded', $woo_manager, 'init_test_gateway_class' );
+
+		$this->loader->add_filter( 'woocommerce_payment_gateways', $woo_manager, 'add_nc_gateway_classes' );
+		$this->loader->add_action( 'plugins_loaded', $woo_manager, 'init_nc_gateway_class' );
 
 		require_once ABSPATH . 'wp-content/plugins/nicheclear_api/includes/class-nicheclear_api-webhooks.php';
 		$webhooks_manager = new NicheclearAPI_Webhooks();
+
 		$this->loader->add_action( 'woocommerce_api_ncapi_create_payment', $webhooks_manager, 'create_payment_webhook' );
 		$this->loader->add_action( 'woocommerce_api_nc-payment-complete', $webhooks_manager, 'payment_complete' );
 
-//		require_once ABSPATH . 'wp-content/plugins/nicheclear_api/includes/payment_gateways/class-nicheclear_api-gateway_base.php';
-//		$payment_gateway = new NicheclearAPI_Webhooks();
 	}
 
 	/**

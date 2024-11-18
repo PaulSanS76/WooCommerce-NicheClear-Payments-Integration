@@ -2,9 +2,22 @@
 
 require_once ABSPATH . 'wp-content/plugins/nicheclear_api/includes/class-nicheclear_api-common.php';
 
+/**
+ * Class NicheclearAPI_Webhooks
+ *
+ * This class handles the webhooks for NicheclearAPI, including payment creation and payment completion events.
+ */
 class NicheclearAPI_Webhooks {
 
 	// /wc-api/ncapi_create_payment
+	/**
+	 * Creates a payment webhook by processing incoming POST requests.
+	 * This method validates the request signature, parses the JSON payload,
+	 * and updates the order information in the database based on the payload
+	 * details. It logs various stages of the process if JSON logging is enabled.
+	 *
+	 * @return void
+	 */
 	public function create_payment_webhook() {
 
 		if ( $_SERVER['REQUEST_METHOD'] !== 'POST' ) {
@@ -16,22 +29,12 @@ class NicheclearAPI_Webhooks {
 		$sandbox   = isset( $_REQUEST['sandbox'] );
 		$hmac_hash = hash_hmac( 'sha256', $post_body, NicheclearAPI_Common::get_signing_key( $sandbox ) );
 
-		/*		if ( NicheclearAPI_Common::json_logging ) {
-					file_put_contents( NicheclearAPI_Common::log_dir() . '/json/' . date( 'Y-m-d_H-i-s' ) . '_create_payment_webhook_hmac.json',
-						json_encode( [ 'hmac_hash' => $hmac_hash ], JSON_PRETTY_PRINT ) );
-				}*/
-
 		$signature = $_SERVER['HTTP_SIGNATURE'] ?? null;
 		if ( $signature !== $hmac_hash ) {
 			NicheclearAPI_Common::error_log( "create_payment_webhook: Invalid signature: " . $signature );
 
 			return;
-		} else {
-//			NicheclearAPI_Common::error_log( "create_payment_webhook: Signature checked successfully" );
 		}
-		/*		if ( NicheclearAPI_Common::json_logging ) {
-					file_put_contents( NicheclearAPI_Common::log_dir() . '/json/' . date( 'Y-m-d_H-i-s' ) . '_create_payment_webhook_signature.json', $signature );
-				}*/
 
 		$webhook_payload = json_decode( $post_body, true );
 		if ( json_last_error() !== JSON_ERROR_NONE ) {
@@ -67,7 +70,6 @@ class NicheclearAPI_Webhooks {
 			]
 		);
 
-//		$note = "PSP response: {$webhook_payload['state']}: {$webhook_payload['externalResultCode']}";
 		$note = implode( ': ', array_filter( [
 			$webhook_payload['terminalName'] ?? null,
 			$webhook_payload['state'] ?? null,
@@ -81,11 +83,24 @@ class NicheclearAPI_Webhooks {
 			$order->update_status( 'completed' ); //TODO: check this
 		}
 
-
 	}
 
 	// /wc-api/nc-payment-complete?uuid={$uuid}
-	//called in a popup iframe
+	/**
+	 * Completes the payment process.
+	 *
+	 * Retrieves payment information using the provided UUID. If the UUID is not provided or invalid,
+	 * it logs an error and redirects the user to the home page. If the order associated with the
+	 * payment information cannot be found, it logs an error and redirects the user to the home page.
+	 *
+	 * Waits for a valid payment status and handles different statuses:
+	 * - COMPLETED: Redirects the user to the thank you page.
+	 * - DECLINED: Logs an error note and redirects the user to the checkout payment page.
+	 * - CANCELLED: Logs a cancellation note and redirects the user to the checkout payment page.
+	 * - Default: Redirects the user to the checkout payment page.
+	 *
+	 * @return void
+	 */
 	public function payment_complete() {
 
 		$uuid = $_REQUEST['uuid'] ?? null;

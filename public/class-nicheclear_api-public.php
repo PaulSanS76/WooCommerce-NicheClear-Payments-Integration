@@ -24,6 +24,13 @@
 require_once ABSPATH . 'wp-content/plugins/nicheclear_api/includes/class-nicheclear_api-common.php';
 require_once ABSPATH . 'wp-content/plugins/nicheclear_api/includes/class-nicheclear_api-db-manager.php';
 
+/**
+ * Class NicheclearAPI_Public
+ *
+ * Handles the public-facing functionality of the plugin.
+ *
+ * @since    1.0.0
+ */
 class NicheclearAPI_Public {
 
 	/**
@@ -105,12 +112,20 @@ class NicheclearAPI_Public {
 
 	}
 
+	/**
+	 * Enqueue the CSS and JavaScript files necessary for the checkout page.
+	 *
+	 * This function registers and localizes the scripts and styles used during the checkout process.
+	 * It checks if the current page is the checkout page or the order payment page,
+	 * and enqueues the appropriate assets for those pages.
+	 *
+	 * @return void
+	 */
 	public function enqueue_checkout_js_css() {
 		if ( is_checkout() ) {
 			$active_payment_methods = NicheclearAPI_DB_Manager::get_active_methods_titles();
 
 			$order_id = 0;
-//			$order_id = WC()->session->get( 'order_awaiting_payment' );
 
 			$ajax_action = 'ncapi_create_order';
 			if ( is_wc_endpoint_url( 'order-pay' ) ) {
@@ -132,6 +147,14 @@ class NicheclearAPI_Public {
 		}
 	}
 
+	/**
+	 * Inject JavaScript and payment method section into the page.
+	 *
+	 * This method includes the SweetAlert library and adds a hidden section for
+	 * additional payment methods that can be displayed dynamically.
+	 *
+	 * @return void
+	 */
 	public function inject_js_after_payment_methods() {
 		?>
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.14.4/dist/sweetalert2.all.min.js"></script>
@@ -146,6 +169,16 @@ class NicheclearAPI_Public {
 		<?php
 	}
 
+	/**
+	 * Handles the creation of a new WooCommerce order.
+	 *
+	 * This method initializes the WooCommerce checkout process using the POST data,
+	 * which includes all the necessary checkout fields, and processes the checkout.
+	 * In case of a successful checkout, it responds with a success message and a redirect URL.
+	 * If an error occurs, it catches the exception and returns an error message.
+	 *
+	 * @return void Responds with a JSON success or error message.
+	 */
 	public function ncapi_create_order() {
 		try {
 			// Initialize WooCommerce checkout instance
@@ -156,7 +189,6 @@ class NicheclearAPI_Public {
 
 			// Assuming everything is fine, respond with a success and redirect URL
 			wp_send_json_success( [
-//				'redirect_url' => $order->get_checkout_order_received_url(),
 				'OK' => true,
 			] );
 
@@ -168,9 +200,17 @@ class NicheclearAPI_Public {
 	}
 
 
+	/**
+	 * Handle the payment process for an order via AJAX request.
+	 *
+	 * This method processes the payment for a given order using the specified payment processor.
+	 * If the order ID or payment processor code is not provided or invalid, it will return an error.
+	 * Otherwise, it will attempt to process the payment and return the result.
+	 *
+	 * @return void
+	 */
 	public function nc_pay_for_order() {
 		try {
-//			$order_id1              = WC()->session->get( 'order_awaiting_payment' );
 			$order_id               = $_REQUEST['order_id'] ?? null;
 			$payment_processor_code = $_REQUEST['payment_processor_code'] ?? null;
 
@@ -182,8 +222,6 @@ class NicheclearAPI_Public {
 				$result            = $payment_processor->process_payment( $order_id );
 				wp_send_json_success( [
 					'OK'        => true,
-//					'redirect'  => $result['redirect'],
-//					'returnUrl' => $result['returnUrl'],
 					'ncapi_checkout_dyn_data' => $result['ncapi_checkout_dyn_data'],
 				] );
 			}
@@ -194,6 +232,7 @@ class NicheclearAPI_Public {
 			) );
 		}
 	}
+
 
 	public function ncapi_add_notice() {
 		$order_id = $_REQUEST['order_id'] ?? null;

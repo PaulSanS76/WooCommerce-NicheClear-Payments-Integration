@@ -122,7 +122,6 @@ class NicheclearAPI_Admin {
 	}
 
 	public function ncapi_register_settings() {
-		// Register settings fields
 		register_setting( 'ncapi_settings', 'ncapi_key', [
 			'type'              => 'string',
 			'sanitize_callback' => 'sanitize_text_field',
@@ -136,54 +135,40 @@ class NicheclearAPI_Admin {
 		] );
 	}
 
-// Render the settings page
-	public function ncapi_render_settings_page_bak() {
-		?>
-        <div class="wrap">
-            <h1><?php echo $this->plugin_name; ?> Settings</h1>
-            <form method="post" action="options.php">
-				<?php
-				// Output nonce, action, and option_page fields for the settings page
-				settings_fields( 'ncapi_settings' );
-				do_settings_sections( 'ncapi_settings' );
-				?>
-                <table class="form-table" style="width: auto;">
-                    <tr valign="top">
-                        <th scope="row" style="width: 100px;"><label for="ncapi_key">API Key</label></th>
-                        <td style="width: 300px;">
-                            <input type="text" id="ncapi_key" name="ncapi_key" style="width: 100%;"
-                                   value="<?php echo esc_attr( get_option( 'ncapi_key' ) ); ?>" required/>
-                        </td>
-                    </tr>
-                    <tr valign="top">
-                        <th scope="row" style="width: 100px;"><label for="ncapi_signing_key">Signing Key</label></th>
-                        <td style="width: 300px;">
-                            <input type="text" id="ncapi_signing_key" name="ncapi_signing_key" style="width: 100%;"
-                                   value="<?php echo esc_attr( get_option( 'ncapi_signing_key' ) ); ?>" required/>
-                        </td>
-                    </tr>
-                </table>
-				<?php submit_button(); ?>
-            </form>
-        </div>
-		<?php
-	}
-
+	/**
+	 * Renders the plugin's Settings page
+	 * @return void
+	 */
 	public function ncapi_render_settings_page() {
 		include ABSPATH . "wp-content/plugins/nicheclear_api/admin/partials/nicheclear_api-admin-display.php";
 	}
 
+	/**
+	 * Retrieve plugin options and payment methods.
+	 *
+	 * This method fetches the plugin settings and available payment methods,
+	 * combining them into a single array. It then returns this array as a
+	 * JSON response.
+	 *
+	 * @return void This function outputs a JSON response with the
+	 * 'settings' and 'payment_methods' keys.
+	 */
 	public function get_plugin_options() {
 		$opts            = NicheclearAPI_Common::get_plugin_options();
 		$payment_methods = NicheclearAPI_DB_Manager::get_payment_method_options();
 		wp_send_json_success( [ 'settings' => $opts, 'payment_methods' => $payment_methods ] );
 	}
 
+	/**
+	 * Save plugin options securely and respond with a JSON object indicating success or failure.
+	 *
+	 * This function updates plugin settings
+	 * and payment methods, and sends a JSON response back to the client.
+	 *
+	 * @return void JSON response indicating success or failure.
+	 */
 	public function save_plugin_options() {
-		// Verify nonce for security
 		if ( isset( $_REQUEST['nonce'] ) && wp_verify_nonce( $_REQUEST['nonce'], 'ncapi_save_options_nonce' ) ) {
-			// Validate and sanitize input
-//			$new_options = array();
 			$json_input = json_decode( file_get_contents( 'php://input' ), true );
 
 			if ( isset( $json_input['options'] ) && is_array( $json_input['options'] ) ) {
@@ -198,16 +183,28 @@ class NicheclearAPI_Admin {
 			$settings = NicheclearAPI_DB_Manager::save_plugin_settings( $new_options['settings'] );
 			NicheclearAPI_DB_Manager::save_plugin_payment_methods( $new_options['payment_methods'] );
 
-			// Send success response
 			wp_send_json_success( $settings );
 		} else {
-			wp_send_json_error( array(
-				'message'  => __( 'Invalid nonce specified', "waxpeer_api" ),
+			wp_send_json_error( [
+				'message'  => 'Invalid nonce specified',
 				'response' => 403,
-			) );
+			] );
 		}
 
 		wp_die();
+	}
+
+	/**
+	 * Perform database cleanup to remove old payment records.
+	 *
+	 * This function calls NicheclearAPI_DB_Manager to clean outdated payment data
+	 * and logs the number of records removed using NicheclearAPI_Common.
+	 *
+	 * @return void
+	 */
+	public function run_db_cleanup() {
+		$cnt = NicheclearAPI_DB_Manager::clean_old_payment_data();
+		NicheclearAPI_Common::error_log( "[DB Cleanup] Removed $cnt old payment records" );
 	}
 
 }

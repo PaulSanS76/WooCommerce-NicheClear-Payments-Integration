@@ -9,6 +9,8 @@ require_once ABSPATH . 'wp-content/plugins/nicheclear_api/includes/class-nichecl
 require_once ABSPATH . 'wp-content/plugins/nicheclear_api/includes/class-nicheclear_api-db-manager.php';
 require_once ABSPATH . 'wp-content/plugins/nicheclear_api/includes/payment_gateways/class-nicheclear_api-gateway_base.php';
 
+use DateTime;
+use DateTimeZone;
 use NicheclearAPI_Common;
 use NicheclearAPI_DB_Manager;
 use PHPUnit\Framework\TestCase;
@@ -75,6 +77,31 @@ class NicheClearAPI_Test extends TestCase {
 		$uuid = wp_generate_uuid4();
 		$l = strlen($uuid); //36
 		$this->assertTrue( true );
+	}
+
+	public function test_get_countries(  ) {
+		$countries = WC()->countries->get_countries();
+		$this->assertTrue( true );
+	}
+
+	public function test_unset(  ) {
+		$a = ['a' => 1, 'b' => 2];
+		unset($a['b']);
+		$this->assertTrue( true );
+	}
+
+	public function test_str_to_time(  ) {
+		$timestamp = strtotime('');
+		$timestamp_next_day_3am = strtotime( '3 AM tomorrow' );
+		$timestamp_3am_next_day = strtotime( '3 AM +1 day' );
+		$minute_later = strtotime( '+1 minute' );
+
+
+		$timestamp = ( new DateTime( 'tomorrow 3:00 am', new DateTimeZone( wp_timezone_string() ) ) )->getTimestamp();
+		
+		
+		$this->assertTrue( true );
+		
 	}
 
 }

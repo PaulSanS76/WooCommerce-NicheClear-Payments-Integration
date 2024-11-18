@@ -30,7 +30,10 @@ class NicheclearAPI_Deactivator {
 	 * @since    1.0.0
 	 */
 	public static function deactivate() {
-
+		$timestamp = wp_next_scheduled( NicheclearAPI_Common::CRON_HOOK_DB_CLEANUP );
+		if ( $timestamp ) {
+			wp_unschedule_event( $timestamp, NicheclearAPI_Common::CRON_HOOK_DB_CLEANUP );
+		}
 	}
 
 }

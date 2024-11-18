@@ -1,8 +1,13 @@
 <?php
 
+/**
+ * The NicheclearAPI_Common class provides common functionality
+ * for the Nicheclear Payment Gateway plugin.
+ */
 class NicheclearAPI_Common {
 
 	const plugin_name = 'Nicheclear Payment Gateway';
+	const CRON_HOOK_DB_CLEANUP = 'ncapi_db_cleanup';
 
 	//whether to log requests and responses as JSON files
 	const json_logging = true;
@@ -156,15 +161,19 @@ class NicheclearAPI_Common {
 		return defined( 'WEBHOOK_URL_BASE' ) ? WEBHOOK_URL_BASE : get_site_url();
 	}
 
+	/**
+	 * Redirects the user to a specified URL in the top frame of the current window.
+	 *
+	 * @param string $location The URL to redirect to.
+	 *
+	 * @return void
+	 */
 	public static function redirect_in_top_frame( $location ) {
 		echo <<<HTML
 <!DOCTYPE html>
 <html>
 <head>
 	<script type="text/javascript">
-	if (typeof window.top.ncapi_add_notice === "function") {
-		window.top.ncapi_add_notice();
-	}
 	window.top.location.href = "{$location}";
 	</script>
 	<title>Redirecting...</title>

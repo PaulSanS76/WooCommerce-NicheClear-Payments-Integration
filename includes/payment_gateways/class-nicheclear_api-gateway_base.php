@@ -3,6 +3,9 @@
 require_once ABSPATH . 'wp-content/plugins/nicheclear_api/includes/class-nicheclear_api-common.php';
 require_once ABSPATH . 'wp-content/plugins/nicheclear_api/includes/class-nicheclear_api-db-manager.php';
 
+/**
+ * WC_Gateway_NicheClear_Base extends WC_Payment_Gateway to provide a custom payment gateway integration.
+ */
 class WC_Gateway_NicheClear_Base extends WC_Payment_Gateway {
 	private $api_url = 'https://app.nicheclear.com';
 	private $api_sandbox_url = 'https://app-demo.nicheclear.com';
@@ -21,25 +24,16 @@ class WC_Gateway_NicheClear_Base extends WC_Payment_Gateway {
 
 	public function __construct() {
 		$this->id = 'nc_base'; // Unique ID for the gateway.
-//		$this->icon       = ''; // URL of the icon that represents the gateway.
-//		$this->has_fields = false; // If the gateway has custom form fields.
 	}
 
 	// Define the settings fields for the payment gateway.
 	public function init_form_fields() {
 		$this->form_fields = array(
-			/*'enabled'     => array(
-				'title'   => 'Enable/Disable',
-				'type'    => 'checkbox',
-				'label'   => "Enable $this->method_title",
-				'default' => 'no',
-			),*/
 			'title'       => array(
 				'title'       => 'Title',
 				'type'        => 'text',
 				'description' => 'This controls the title that the user sees during checkout.',
 				'default'     => $this->method_title,
-//				'desc_tip'    => true,
 			),
 			'description' => array(
 				'title'       => 'Description',
@@ -56,15 +50,22 @@ class WC_Gateway_NicheClear_Base extends WC_Payment_Gateway {
 		);
 	}
 
-	// Process the payment (this is where the gateway logic would go).
+	/**
+	 * Processes a payment for a given order.
+	 *
+	 * @param int $order_id The ID of the order to process the payment for.
+	 *
+	 * @return array The result of the payment process, including status and URLs.
+	 * @throws Exception If an error occurs during the payment process.
+	 */
 	public function process_payment( $order_id ) {
 
 		try {
 			$order = wc_get_order( $order_id );
 			$req   = $this->ncapi_create_payment_request( $order );
-			NicheclearAPI_DB_Manager::insert_payment_info( $req['uuid'], $order_id, $req );
-			$uuid = $req['uuid'];
+			$uuid  = $req['uuid'];
 			unset( $req['uuid'] );
+			NicheclearAPI_DB_Manager::insert_payment_info( $uuid, $order_id, $req );
 
 			$nc_resp = $this->ncapi_send_payment_request( $req );
 
@@ -87,23 +88,16 @@ class WC_Gateway_NicheClear_Base extends WC_Payment_Gateway {
 				throw new Exception( 'An error occurred while processing the payment: no redirectUrl returned' );
 			}
 
-			//		$order->payment_complete();
-
 			return [
-				'result'            => 'success',
-//				'redirect'          => $ncapi_redirect_url,
-//				'order_id' => $order_id,
-				'returnUrl'         => get_site_url() . "/wc-api/nc-payment-complete?order_id={$order->get_id()}",
+				'result'                  => 'success',
+				'returnUrl'               => get_site_url() . "/wc-api/nc-payment-complete?uuid={$uuid}",
 				'ncapi_checkout_dyn_data' => [
 					'order_id'       => $order->get_id(),
 					'payment_uuid'   => $uuid,
 					'payment_method' => $this->get_payment_processor_code(),
-					'nc_frame_url'       => $ncapi_redirect_url,
-					'after_pay_url'      => get_site_url() . "/wc-api/nc-payment-complete?order_id={$order->get_id()}",
+					'nc_frame_url'   => $ncapi_redirect_url,
+					'after_pay_url'  => get_site_url() . "/wc-api/nc-payment-complete?uuid={$uuid}",
 				]
-
-//				'ncapi_redirect_url' => $ncapi_redirect_url,
-				//			'redirect' => $this->get_return_url( $order ),
 			];
 		} catch ( Exception $e ) {
 			NicheclearAPI_Common::error_log( "process_payment: {$e->getMessage()}" );
@@ -124,6 +118,13 @@ class WC_Gateway_NicheClear_Base extends WC_Payment_Gateway {
 		return $this->enabled;
 	}
 
+	/**
+	 * Create a payment request for the given WooCommerce order.
+	 *
+	 * @param WC_Order $order WooCommerce order object to create the payment request for.
+	 *
+	 * @return array Associative array containing the payment request details.
+	 */
 	public function ncapi_create_payment_request( WC_Order $order ): array {
 
 		$uuid = wp_generate_uuid4();
@@ -150,14 +151,18 @@ class WC_Gateway_NicheClear_Base extends WC_Payment_Gateway {
 				'postalCode'   => $order->get_billing_postcode()
 			],
 			'webhookUrl'     => NicheclearAPI_Common::get_webhook_url_base() . "/wc-api/ncapi_create_payment?uuid={$uuid}" . ( $this->is_sandbox ? '&sandbox' : '' ),
-//			'returnUrl'      => get_site_url() . "/wc-api/nc-payment-complete?order_id={$order->get_id()}",
 			'returnUrl'      => get_site_url() . "/wc-api/nc-payment-complete?uuid={$uuid}",
 		];
 
 	}
 
 	/**
-	 * @throws Exception
+	 * Sends a payment request to the Nicheclear API.
+	 *
+	 * @param array $request The payment request data to be sent to the API.
+	 *
+	 * @return mixed The response from the API, decoded from JSON.
+	 * @throws Exception If there is an error creating the payment request or parsing the response.
 	 */
 	public function ncapi_send_payment_request( array $request ): mixed {
 		if ( NicheclearAPI_Common::json_logging ) {
@@ -172,7 +177,6 @@ class WC_Gateway_NicheClear_Base extends WC_Payment_Gateway {
 				'body'    => json_encode( $request ),
 			]
 		);
-//		$http_code = wp_remote_retrieve_response_code( $response );
 
 		if ( ! is_wp_error( $response ) ) {
 			$body = wp_remote_retrieve_body( $response );
@@ -197,7 +201,46 @@ class WC_Gateway_NicheClear_Base extends WC_Payment_Gateway {
 
 	}
 
-	/*	public function payment_fields(  ) {
-			echo 'payment_fields';
-		}*/
+	/**
+	 * Determines if the payment method is available for use.
+	 *
+	 * Checks if the customer's billing country is in the allowed countries list
+	 * for the payment processor.
+	 *
+	 * @return bool True if the payment method is available, false otherwise.
+	 */
+	public function is_available() {
+		// Default WooCommerce checks
+		if ( ! parent::is_available() ) {
+			return false;
+		}
+
+		if ( ! is_checkout() ) {
+			return true;
+		}
+
+		$payment_processor_code = strtolower( $this->get_payment_processor_code() );
+
+		$allowed_countries = get_option( "ncapi_allowed_countries_{$payment_processor_code}", 'all' );
+
+		if ( $allowed_countries == 'all' ) {
+			return true;
+		}
+
+		if ( $allowed_countries == 'none' ) {
+			return false;
+		}
+
+		$allowed_countries = explode( ',', $allowed_countries );
+
+		// Get the customer's billing country
+		$billing_country = WC()->customer->get_billing_country();
+
+		if ( ! in_array( $billing_country, $allowed_countries ) ) {
+			return false;
+		}
+
+		return true;
+	}
+
 }

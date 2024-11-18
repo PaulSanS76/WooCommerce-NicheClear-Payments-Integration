@@ -8,6 +8,13 @@
  * @package    Nicheclear_api
  * @subpackage Nicheclear_api/admin/partials
  */
+
+
+/**
+ *
+ * This template loads Vue.js and PrimeVue
+ * to render the settings form and payment methods management with Vue.js.
+ */
 ?>
 
 <?php
@@ -29,6 +36,9 @@ $primevue_ver = '3.34.1';
 <script src="https://cdn.jsdelivr.net/npm/primevue@<?= $primevue_ver ?>/progressspinner/progressspinner.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/primevue@<?= $primevue_ver ?>/datatable/datatable.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/primevue@<?= $primevue_ver ?>/column/column.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/primevue@<?= $primevue_ver ?>/multiselect/multiselect.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/primevue@<?= $primevue_ver ?>/accordion/accordion.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/primevue@<?= $primevue_ver ?>/accordiontab/accordiontab.min.js"></script>
 
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
@@ -52,12 +62,27 @@ $primevue_ver = '3.34.1';
     #payment-methods td {
         padding: 4px;
     }
+
+    .p-accordion {
+        width: 320px;
+    }
+
+    .p-datatable .p-datatable-tbody > tr > td {
+        vertical-align: top;
+    }
+
+    .p-accordion .p-accordion-content, .p-accordion .p-accordion-header .p-accordion-header-link {
+        border: none !important;
+        box-shadow: none !important;
+        padding: 5px 10px 5px 0 !important;
+    }
 </style>
 
 
 <div id="app" style="margin-right: 10px;">
+
     <template v-if="ui_ready">
-        <form method="post" style="width: 800px; max-width: 100%" @submit.prevent="save_settings()">
+        <form method="post" style="max-width: 100%" @submit.prevent="save_settings()">
 
             <h2>Nicheclear API Settings</h2>
 
@@ -110,36 +135,6 @@ $primevue_ver = '3.34.1';
             <div style="margin-top: 25px;">
                 <h2>Payment Methods</h2>
 
-                <table v-if="false" id="payment-methods" class="form-table" role="presentation">
-                    <thead>
-                    <tr>
-                        <th scope="row">Payment Method</th>
-                        <th scope="row">Listed</th>
-                        <th scope="row">Enabled</th>
-                        <th scope="row">Production/Sandbox</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr v-for="(payment_method_id) in all_payment_methods" :key="payment_method_id">
-                        <td>{{payment_method_id}}</td>
-                        <td>
-                            <p-togglebutton v-model="payment_methods[payment_method_id].listed"
-                                            onIcon="pi pi-check" offIcon="pi pi-times"/>
-                        </td>
-                        <td>
-                            <p-togglebutton v-if="!!payment_methods[payment_method_id].listed"
-                                            v-model="payment_methods[payment_method_id].enabled"
-                                            onIcon="pi pi-check" offIcon="pi pi-times"/>
-                        </td>
-                        <td>
-                            <p-togglebutton v-if="!!payment_methods[payment_method_id].listed"
-                                            v-model="payment_methods[payment_method_id].sandbox"
-                                            onIcon="pi pi-check" offIcon="pi pi-times"/>
-                        </td>
-                    </tr>
-                    </tbody>
-                </table>
-
                 <p-dataTable :value="Object.values(payment_methods)"
                              v-model:filters="filters" filterDisplay="row" :globalFilterFields="['payment_method']"
                 >
@@ -178,6 +173,66 @@ $primevue_ver = '3.34.1';
                             />
                         </template>
                     </p-column>
+
+                    <p-column header="Allowed Countries">
+                        <template #body="{data}">
+
+                            <div v-if="!!data.listed">
+
+                                <div>
+                                    <div v-if="data.countries.length === 0">
+                                        None
+                                    </div>
+                                    <div v-else-if="data.countries.length === all_countries_count">
+                                        All
+                                    </div>
+                                    <div v-else>
+                                        <div v-for="country in data.countries.sort().slice(0, 2)"
+                                             v-html="all_countries[country]">
+                                        </div>
+
+                                        <div v-if="data.countries.length > 2">
+                                            <p-accordion>
+                                                <p-accordiontab :unstyled="true"
+                                                                :header="`${data.countries.length - 2} more...`">
+                                                    <div v-for="country in data.countries.sort().slice(2)"
+                                                         v-html="all_countries[country]">
+                                                    </div>
+                                                </p-accordiontab>
+                                            </p-accordion>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <p-multiselect v-model="data.countries" :options="Object.keys(all_countries)"
+                                               filter :option-label="x=>all_countries[x]" :reset-filter-on-hide="true"
+                                               :auto-filter-focus="true"
+                                               placeholder="Select Countries" display="comma"
+                                               class="w-full md:w-20rem mt-2">
+
+                                    <template #footer>
+                                        <div class="py-2 px-3">
+                                            <b>{{ data.countries ? data.countries.length : 0 }}</b>
+                                            item{{ (data.countries ? data.countries.length : 0) > 1 ? 's' : '' }}
+                                            selected.
+                                        </div>
+                                    </template>
+
+                                    <template #option="{option}">
+                                        <span v-html="all_countries[option]"></span>
+                                    </template>
+
+                                    <template #value>
+                                        Add/Remove...
+                                    </template>
+
+                                </p-multiselect>
+
+                            </div>
+
+                        </template>
+                    </p-column>
+
                 </p-dataTable>
             </div>
 
@@ -213,20 +268,24 @@ $primevue_ver = '3.34.1';
                 const payment_methods = ref({});
                 const messages = ref({});
                 const all_payment_methods = <?php echo json_encode( NicheclearAPI_Common::$all_payment_methods ); ?>;
+                const all_countries = <?php echo json_encode( WC()->countries->get_countries() ); ?>;
+                const all_countries_count = Object.keys(all_countries).length;
 
                 const filters = ref({
                     global: {value: null, matchMode: FilterMatchMode.CONTAINS},
-                    /*name: { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-                    'country.name': { value: null, matchMode: FilterMatchMode.STARTS_WITH },
-                    representative: { value: null, matchMode: FilterMatchMode.IN },
-                    status: { value: null, matchMode: FilterMatchMode.EQUALS },
-                    verified: { value: null, matchMode: FilterMatchMode.EQUALS }*/
                 });
 
 
                 // settings.value = {};
                 return {
-                    ui_ready, settings, messages, payment_methods, all_payment_methods, filters,
+                    ui_ready,
+                    settings,
+                    messages,
+                    payment_methods,
+                    all_payment_methods,
+                    filters,
+                    all_countries,
+                    all_countries_count,
                 };
             },
 
@@ -248,13 +307,28 @@ $primevue_ver = '3.34.1';
                 async save_settings() {
                     this.messages.save_settings = null;
 
+                    payment_methods = Object.keys(this.payment_methods).map(code => {
+                        const pm = {...this.payment_methods[code]};
+
+                        switch (pm.countries.length) {
+                            case 0:
+                                pm.countries = 'none';
+                                break;
+                            case this.all_countries_count:
+                                pm.countries = 'all';
+                                break;
+                        }
+
+                        return pm;
+                    });
+
                     const {
                         data: {
                             success,
                             data
                         }
                     } = await axios.post('<?php echo admin_url( 'admin-ajax.php' ); ?>', {
-                        options: {settings: this.settings, payment_methods: this.payment_methods},
+                        options: {settings: this.settings, payment_methods},
                     }, {
                         params: {
                             action: 'save_plugin_options',
@@ -277,6 +351,10 @@ $primevue_ver = '3.34.1';
                     // console.log(data);
                 },
 
+                log(event) {
+                    console.log(event);
+                }
+
             }
 
         })
@@ -288,6 +366,9 @@ $primevue_ver = '3.34.1';
     app.component('p-progressspinner', primevue.progressspinner);
     app.component('p-datatable', primevue.datatable);
     app.component('p-column', primevue.column);
+    app.component('p-multiselect', primevue.multiselect);
+    app.component('p-accordion', primevue.accordion);
+    app.component('p-accordiontab', primevue.accordiontab);
 
     app.mount('#app');
 </script>
