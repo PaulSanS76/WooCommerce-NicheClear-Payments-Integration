@@ -1,114 +1,122 @@
 === Plugin Name ===
-Contributors: (this should be a list of wordpress.org userid's)
+Contributors: meadowlark
 Donate link: https://meadowlark.com/
-Tags: comments, spam
-Requires at least: 3.0.1
-Tested up to: 3.4
-Stable tag: 4.3
+Tags: nicheclear, payment, gateway, woocommerce, api, multi-payment
+Requires at least: 5.0
+Tested up to: 6.4
+Stable tag: 1.0.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-Here is a short description of the plugin.  This should be no more than 150 characters.  No markup here.
+Integrate multiple payment methods through Nicheclear's unified payment gateway API for WooCommerce stores.
 
 == Description ==
 
-This is the long description.  No limit, and you can use Markdown (as well as in the following sections).
+**Nicheclear Payment Gateway** is a comprehensive WordPress plugin that integrates your WooCommerce store with Nicheclear's multi-payment gateway API. This plugin enables you to accept various payment methods through a single, unified integration, simplifying your payment processing while expanding customer payment options.
 
-For backwards compatibility, if this section is missing, the full length of the short description will be used, and
-Markdown parsed.
+## Key Features
 
-A few notes about the sections above:
+* **Multi-Payment Gateway Support**: Accept multiple payment methods through a single integration
+* **Dynamic Gateway Loading**: Automatically load available payment methods from Nicheclear API
+* **WooCommerce Native Integration**: Seamless integration with existing WooCommerce stores
+* **Webhook Support**: Real-time payment notifications and order status updates
+* **Flexible Configuration**: Easy setup and customization of payment gateway options
+* **Database Management**: Efficient storage and retrieval of payment method configurations
+* **Generic Gateway Framework**: Extensible architecture for adding new payment methods
 
-*   "Contributors" is a comma separated list of wp.org/wp-plugins.org usernames
-*   "Tags" is a comma separated list of tags that apply to the plugin
-*   "Requires at least" is the lowest version that the plugin will work on
-*   "Tested up to" is the highest version that you've *successfully used to test the plugin*. Note that it might work on
-higher versions... this is just the highest one you've verified.
-*   Stable tag should indicate the Subversion "tag" of the latest stable version, or "trunk," if you use `/trunk/` for
-stable.
+## Perfect For
 
-    Note that the `readme.txt` of the stable tag is the one that is considered the defining one for the plugin, so
-if the `/trunk/readme.txt` file says that the stable tag is `4.3`, then it is `/tags/4.3/readme.txt` that'll be used
-for displaying information about the plugin.  In this situation, the only thing considered from the trunk `readme.txt`
-is the stable tag pointer.  Thus, if you develop in trunk, you can update the trunk `readme.txt` to reflect changes in
-your in-development version, without having that information incorrectly disclosed about the current stable version
-that lacks those changes -- as long as the trunk's `readme.txt` points to the correct stable tag.
+* E-commerce stores requiring multiple payment options
+* Businesses looking to streamline payment processing
+* Developers building custom payment integrations
+* Online stores serving international customers
 
-    If no stable tag is provided, it is assumed that trunk is stable, but you should specify "trunk" if that's where
-you put the stable version, in order to eliminate any doubt.
+## How It Works
+
+The plugin dynamically loads available payment methods from the Nicheclear API and creates corresponding WooCommerce payment gateways. Each payment method becomes a separate gateway option in your WooCommerce checkout, allowing customers to choose their preferred payment method while maintaining a unified backend integration.
 
 == Installation ==
 
-This section describes how to install the plugin and get it working.
+1. Upload the `nicheclear_api` folder to the `/wp-content/plugins/` directory
+2. Activate the plugin through the 'Plugins' menu in WordPress
+3. Configure your Nicheclear API credentials in the plugin settings
+4. Set up your preferred payment methods and gateway options
+5. Test the integration with a test transaction
 
-e.g.
+## Requirements
 
-1. Upload `nicheclear_api.php` to the `/wp-content/plugins/` directory
-1. Activate the plugin through the 'Plugins' menu in WordPress
-1. Place `<?php do_action('plugin_name_hook'); ?>` in your templates
+* WordPress 5.0 or higher
+* WooCommerce 3.0 or higher
+* PHP 7.4 or higher
+* Valid Nicheclear API credentials
+* SSL certificate (required for payment processing)
 
 == Frequently Asked Questions ==
 
-= A question that someone might have =
+= What is Nicheclear? =
 
-An answer to that question.
+Nicheclear is a payment service provider that offers a unified API for multiple payment methods, allowing businesses to accept various payment types through a single integration.
 
-= What about foo bar? =
+= Do I need a Nicheclear account? =
 
-Answer to foo bar dilemma.
+Yes, you'll need to sign up for a Nicheclear account and obtain API credentials to use this plugin.
+
+= Which payment methods are supported? =
+
+The plugin dynamically loads available payment methods from your Nicheclear account, so the specific methods depend on your account configuration and location.
+
+= Is this plugin secure? =
+
+Yes, the plugin follows WordPress security best practices and integrates securely with Nicheclear's API using proper authentication and encryption.
+
+= Can I customize the payment gateway appearance? =
+
+Yes, the plugin provides options for customizing gateway labels, descriptions, and checkout appearance.
+
+= Does this work with existing WooCommerce orders? =
+
+Yes, the plugin integrates seamlessly with your existing WooCommerce setup and won't affect previous orders.
 
 == Screenshots ==
 
-1. This screen shot description corresponds to screenshot-1.(png|jpg|jpeg|gif). Note that the screenshot is taken from
-the /assets directory or the directory that contains the stable readme.txt (tags or trunk). Screenshots in the /assets
-directory take precedence. For example, `/assets/screenshot-1.png` would win over `/tags/4.3/screenshot-1.png`
-(or jpg, jpeg, gif).
-2. This is the second screen shot
+1. Plugin configuration panel showing API settings and payment method options
+2. WooCommerce payment gateway settings with Nicheclear integration
+3. Checkout page displaying multiple payment method options
 
 == Changelog ==
 
-= 1.0 =
-* A change since the previous version.
-* Another change.
-
-= 0.5 =
-* List versions from most recent at top to oldest at bottom.
+= 1.0.0 =
+* Initial release with core Nicheclear API integration
+* Multi-payment gateway support
+* WooCommerce payment gateway integration
+* Webhook handling for payment notifications
 
 == Upgrade Notice ==
 
-= 1.0 =
-Upgrade notices describe the reason a user should upgrade.  No more than 300 characters.
+= 1.0.0 =
+Initial release with comprehensive payment gateway integration. Perfect for stores requiring multiple payment options.
 
-= 0.5 =
-This version fixes a security related bug.  Upgrade immediately.
+== Support ==
 
-== Arbitrary section ==
+For support, feature requests, or bug reports, please visit [Meadowlark](https://meadowlark.com/) or contact our development team.
 
-You may provide arbitrary sections, in the same format as the ones above.  This may be of use for extremely complicated
-plugins where more information needs to be conveyed that doesn't fit into the categories of "description" or
-"installation."  Arbitrary sections will be shown below the built-in sections outlined above.
+## Technical Details
 
-== A brief Markdown Example ==
+The plugin is built with modern PHP practices and includes:
+* Dynamic payment gateway loading from Nicheclear API
+* WooCommerce payment gateway framework integration
+* Webhook handling for real-time updates
+* Efficient database operations for payment method storage
+* Extensible architecture for future payment method additions
+* Comprehensive error handling and logging
 
-Ordered list:
+## Payment Methods
 
-1. Some feature
-1. Another feature
-1. Something else about the plugin
+The plugin automatically detects and loads available payment methods from your Nicheclear account, which may include:
+* Credit and debit cards
+* Digital wallets
+* Bank transfers
+* Local payment methods
+* Cryptocurrency payments (if supported)
 
-Unordered list:
-
-* something
-* something else
-* third thing
-
-Here's a link to [WordPress](http://wordpress.org/ "Your favorite software") and one to [Markdown's Syntax Documentation][markdown syntax].
-Titles are optional, naturally.
-
-[markdown syntax]: http://daringfireball.net/projects/markdown/syntax
-            "Markdown is what the parser uses to process much of the readme file"
-
-Markdown uses email style notation for blockquotes and I've been told:
-> Asterisks for *emphasis*. Double it up  for **strong**.
-
-`<?php code(); // goes in backticks ?>`
+Each payment method becomes a separate gateway option in your WooCommerce checkout, providing customers with multiple payment choices while maintaining a unified backend integration.
